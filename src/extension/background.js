@@ -52,14 +52,22 @@ class Node {
     this.branch = tabObj.currBranch;
     this.stateSnapshot = obj;
     this.children = [];
+<<<<<<< HEAD
+    //console.log('created node in  background.js constructor');
+    //console.log('tabsObj is: ', tabsObj);
+=======
+>>>>>>> master
   }
 }
 
+// Carlos: no clue what is the purpose of this thing
 function sendToHierarchy(tabObj, newNode) {
   if (!tabObj.currLocation) {
+    console.log('no currLocation, creating...');
     tabObj.currLocation = newNode;
     tabObj.hierarchy = newNode;
   } else {
+    console.log('currLocation exists')
     tabObj.currLocation.children.push(newNode);
     // gabi and nate :: if the node's children's array is empty
     if (tabObj.currLocation.children.length > 1) {
@@ -70,6 +78,7 @@ function sendToHierarchy(tabObj, newNode) {
     }
     tabObj.currLocation = newNode;
   }
+  console.log('hierarchy complete:', tabObj.hierarchy);
 }
 
 function changeCurrLocation(tabObj, rootNode, index, name) {
@@ -86,7 +95,8 @@ function changeCurrLocation(tabObj, rootNode, index, name) {
     return;
     // if not, recurse on each one of the children
   }
-  if (rootNode.children) {
+  // Carlos: this can be made more efficient with for loop and exiting when node found
+  if (rootNode.children) { // Carlos: remove if, redundant
     rootNode.children.forEach(child => {
       changeCurrLocation(tabObj, child, index, name);
     });
@@ -106,6 +116,7 @@ chrome.runtime.onConnect.addListener(port => {
       action: 'initialConnectSnapshots',
       payload: tabsObj,
     });
+
   }
 
   // every time devtool is closed, remove the port from portsArr
@@ -136,6 +147,7 @@ chrome.runtime.onConnect.addListener(port => {
         tabsObj[tabId].snapshots = payload;
         return true;
       case 'emptySnap':
+        console.log('running emptySnap');
         // gabi :: activate empty mode
         tabsObj[tabId].mode.empty = true;
         // gabi :: record snapshot of page initial state
@@ -143,9 +155,13 @@ chrome.runtime.onConnect.addListener(port => {
         // gabi :: reset snapshots to page last state recorded
         tabsObj[tabId].snapshots = [tabsObj[tabId].snapshots[tabsObj[tabId].snapshots.length - 1]];
         // gabi :: record hierarchy of page initial state
+<<<<<<< HEAD
+        tabsObj[tabId].initialHierarchy = { ...tabsObj[tabId].hierarchy, children: [] };
+=======
         // tabsObj[tabId].initialHierarchy = {...tabsObj[tabId].hierarchy};
         // tabsObj[tabId].initialHierarchy.children = [];
         tabsObj[tabId].initialHierarchy = {...tabsObj[tabId].hierarchy, children: []};
+>>>>>>> master
         // gabi :: reset hierarchy
         tabsObj[tabId].hierarchy.children = [];
         // gabi :: reset hierarchy to page last state recorded
@@ -179,9 +195,16 @@ chrome.runtime.onConnect.addListener(port => {
 // background.js recieves message from contentScript.js
 chrome.runtime.onMessage.addListener((request, sender) => {
   // IGNORE THE AUTOMATIC MESSAGE SENT BY CHROME WHEN CONTENT SCRIPT IS FIRST LOADED
+<<<<<<< HEAD
+  if (request.type === 'SIGN_CONNECT') {
+    console.log('in SIGN_CONNECT');
+    return true;
+  };
+=======
   if (request.type === 'SIGN_CONNECT'){
     return true;
   }
+>>>>>>> master
   const tabTitle = sender.tab.title;
   const tabId = sender.tab.id;
   const { action, index, name } = request;
@@ -205,6 +228,7 @@ chrome.runtime.onMessage.addListener((request, sender) => {
 
   switch (action) {
     case 'jumpToSnap': {
+      console.log('running jumpToSnap');
       changeCurrLocation(tabsObj[tabId], tabsObj[tabId].hierarchy, index, name);
       break;
     }
@@ -233,6 +257,7 @@ chrome.runtime.onMessage.addListener((request, sender) => {
           }
         }
       // gabi :: reset currLocation to page initial state
+      console.log('running tabReload');
       tabsObj[tabId].currLocation = tabsObj[tabId].hierarchy;
       // gabi :: reset index
       tabsObj[tabId].index = 0;
@@ -251,6 +276,7 @@ chrome.runtime.onMessage.addListener((request, sender) => {
       break;
     }
     case 'recordSnap': {
+      console.log('*****&&&&& PAYLOAD IN BACKGROUND:', request.payload);
       const sourceTab = tabId;
       // first snapshot received from tab
       if (!firstSnapshotReceived[tabId]) {
@@ -258,6 +284,7 @@ chrome.runtime.onMessage.addListener((request, sender) => {
         reloaded[tabId] = false;
 
         tabsObj[tabId].snapshots.push(request.payload);
+        console.log('recordSnap 1');
         sendToHierarchy(
           tabsObj[tabId],
           new Node(request.payload, tabsObj[tabId]),
@@ -279,6 +306,7 @@ chrome.runtime.onMessage.addListener((request, sender) => {
       } else {
         tabsObj[tabId].snapshots.push(request.payload);
         //! INVOKING buildHierarchy FIGURE OUT WHAT TO PASS IN!!!!
+        console.log('recordSnap 2');
         sendToHierarchy(
           tabsObj[tabId],
           new Node(request.payload, tabsObj[tabId]),
@@ -323,6 +351,10 @@ chrome.tabs.onRemoved.addListener(tabId => {
 // when tab is view change, put the tabid as the current tab
 chrome.tabs.onActivated.addListener(info => {
   // tell devtools which tab to be the current
+<<<<<<< HEAD
+  console.log('this is info.tabId from chrome.tabs.onActivated.addListener', info);
+=======
+>>>>>>> master
   if (portsArr.length > 0) {
     portsArr.forEach(bg =>
       bg.postMessage({
